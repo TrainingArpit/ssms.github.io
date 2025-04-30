@@ -1,6 +1,6 @@
 create database payrollap;
 use payrollap;
-
+--------------------------------------------------------------------------------------------
 create table Employees(
 Emp_id int identity(1,1) primary key,
 Emp_fname varchar(200),
@@ -9,7 +9,7 @@ Emp_dob date not null,
 Dept_id int not null
 foreign key (Dept_id) references Department(Dept_id) 
 );
-
+------------------------------------------------------
 create table Department(
 Dept_id int identity(1,1) primary key,
 Dept_name nvarchar(200) not null
@@ -34,7 +34,7 @@ values
 insert into Employees(Emp_fname,Emp_lname,Emp_dob,Dept_id)
 values
 ('Radhe','Mohan','2000-06-23',1);
-
+--------------------------------------------------------------------------------------------------
 CREATE FUNCTION GetFullName(@Fname nvarchar(50),@Lname nvarchar(50))
 
 Returns nvarchar(100)
@@ -46,7 +46,7 @@ End
 
 select dbo.GetFullName('Arpit','Thakur')
 
-
+----------------------------------------------------------------------------------------------------
 create Function GetEmployeeList()
 Returns Table
 as 
@@ -57,7 +57,7 @@ from employees where dept_id=1
 )
 
 select * from dbo.GetEmployeeList();
-
+----------------------------------------------------------------------------------------------------
 Create Function GetEmployeeListByDept(@dept_id int)
 Returns @Result Table (emp_id int,emp_fname nvarchar(100))
 as
@@ -67,5 +67,14 @@ Begin
  where dept_id = @dept_id
  return
 end
-
 select * from dbo.GetEmployeeListbyDept(1); 
+-----------------------------------------------------------------------------------------------------
+CREATE Function GetEmployeeListCount()
+Returns int
+As
+Begin 
+return(
+select count(*) from Employees)
+end
+select dbo.GetEmployeeListCount();
+------------------------------------------------------------------------------------------------------
