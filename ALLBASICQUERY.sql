@@ -64,7 +64,7 @@ VALUES
 
 select * from ACCOUNTS;
 
------------------------TRANSACTION HERE------------------
+                                   -----------------------TRANSACTION HERE------------------
 BEGIN TRANSACTION;
 UPDATE ACCOUNTS
 SET Balance =7584.89
@@ -143,6 +143,229 @@ SET @LAST_NAME ='Thakur';
 SET @FULL_NAME =@FIRST_NAME + ' ' + @LAST_NAME ;
 SELECT @FULL_NAME;
 
+---------------------------------------------------------Using SCALAR VARIABLES IN QUERIES----------------------------------------------
+DECLARE @Name NVARCHAR(50),@Salary DECIMAL(10,2),@Bonus DECIMAL(10,2),@Bonus_rate FLOAT ,@T_Salary DECIMAL(10,2)
+SET @Name ='Arpit'
+SET @Salary =60000;
+SET @Bonus_rate=0.5;
+SET @Bonus = @Salary * @Bonus_rate;
+SET @T_Salary = @Salary + @Bonus;
+SELECT @Name AS EMP_NAME,@Salary AS EMP_SALARY,@Bonus_rate AS BONUS_RATE,@Bonus AS Bonus_Salary,@T_Salary AS Total_Salary;
 
+--------------------------------------------------------WORKING on Procedures------------------------------------------------------------
 
+CREATE TABLE Department(
+Dept_id INT IDENTITY(1,1) PRIMARY KEY,
+Dept_name NVARCHAR(50) UNIQUE NOT NULL
+);
 
+CREATE TABLE Employees1(
+Emp_Id INT IDENTITY(1,1) PRIMARY KEY,
+Emp_Name NVARCHAR(50) NOT NULL,
+Salary DECIMAL(10,2),
+Dept_Id Int,
+FOREIGN KEY (Dept_Id) REFERENCES Department(Dept_Id) ON DELETE CASCADE-----------------by using ON DELETE CASCADE-THE CHANGES THAT ARE MADE IN PARENT TABLE IS AUTOMATICALLY APPLIED TO THE CHILD TABLE
+);
+
+INSERT INTO Department(Dept_name)
+VALUES
+('HR'),
+('IT'),
+('Finance');
+
+INSERT INTO Employees1(Emp_Name,Salary,Dept_Id)
+VALUES
+('Arpit',58000,1),
+('Vee',75664,2),
+('BULL',84774,3);
+
+SELECT * FROM Department;
+SELECT * FROM Employees1;
+
+ALTER TABLE Employees1
+Drop COLUMN JoinDate;
+
+ALTER TABLE Employees1
+ADD Join_Date Date DEFAULT GETDATE();
+
+UPDATE Employees1
+SET Join_Date='2025-11-22'
+WHERE Emp_Id =3;
+         ---------------------------------------------------CREATING A PROCEDURE--------------------------------------------------
+CREATE PROCEDURE AddEmployee
+ @Name NVARCHAR(100),
+ @Salary DECIMAL(10,2),
+ @Dept_ID INT,
+ @New_Emp_Id INT OUTPUT
+ AS
+ BEGIN 
+   DECLARE @ErrorMsg NVARCHAR(4000);
+    
+	BEGIN TRY
+	    BEGIN TRANSACTION;
+		------------------------------------------------------inserting new employee---------------------------------------------
+		INSERT INTO Employees1(Emp_Name,Salary,Dept_Id)
+		VALUES(@Name,@Salary,@Dept_Id);
+
+	    ------------------------------------------------Retrieve the new Employee Value----------------------
+	SET @New_Emp_Id =SCOPE_IDENTITY();
+
+	COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+    ROLLBACK TRANSACTION;
+
+	SET @ErrorMsg = ERROR_MESSAGE();
+	PRINT 'Error Occupied: ' + @ErrorMsg;
+END CATCH
+END;
+
+DECLARE @NewId INT;
+
+EXEC AddEmployee
+    @Name = 'Eve',
+	@Salary =75000,
+	@Dept_ID =2,
+	@New_Emp_Id =@NewId OUTPUT;
+
+SELECT @NewId AS NewEmployeeID;
+
+DELETE FROM Employees1
+WHERE Emp_Id =5;
+
+Select * from Employees1;
+-------------------------------------------------One more example for better understanding of the concept Transactions----------------------------------------------------------------------
+
+CREATE TABLE Accounts(
+Acc_Id INT IDENTITY(1,1) PRIMARY KEY,
+Acc_Name NVARCHAR(50),
+Balance DECIMAL(10,2)
+);
+INSERT INTO Accounts (Acc_Name,Balance)
+VALUES
+('Arpit',23239.00),
+('Vee',434636.00);
+
+------------------------------------use this for checking the insufficient  balance ---------------------------------
+
+UPDATE Accounts
+SET Balance =500.00
+WHERE Acc_Id = 2;
+SELECT * FROM Accounts;
+
+--------------------------------------here i am using this transaction to send money from one account to another-----------------------
+
+DECLARE @Amount DECIMAL(10,2) = 400;
+DECLARE @FromAccount INT = 1;
+DECLARE @ToAccount INT =2;
+ 
+ BEGIN TRANSACTION;
+ ---------------------------------Deducting from source Account-------------------------
+ UPDATE Accounts
+ SET BALANCE = BALANCE - @Amount
+ WHERE Acc_Id = @FromAccount;
+ -----------------------------------Add to Destination Account -----------------------
+ UPDATE Accounts
+ SET BALANCE =BALANCE + @Amount
+ WHERE Acc_Id = @ToAccount;
+
+ IF (SELECT BALANCE FROM Accounts WHERE Acc_Id =@FromAccount) < 0
+ BEGIN
+        PRINT 'INSUFFICIENT FUNDS. TRANSACTION ROLLED BACK.';
+		ROLLBACK;
+ END
+ ELSE 
+ BEGIN
+      PRINT 'TRANSACTON COMMITED SUCCESSFULLY'
+	  COMMIT;
+END;
+SELECT * FROM Accounts;
+
+-------------------------------------------------GETTING A BETTER UNDERSTANDING OF PROCEDURES----------------------------------------------
+
+CREATE TABLE EMPLOYEE
+(
+EMP_ID INT IDENTITY(1,1) PRIMARY KEY,
+EMP_NAME NVARCHAR(50),
+SALARY DECIMAL(10,2)
+);
+INSERT INTO EMPLOYEE(EMP_NAME,SALARY)
+VALUES
+('KING',77474.22),
+('ARPIT',84899.00),
+('VEE',84589.00);
+
+SELECT * FROM EMPLOYEE;
+----------------------------------------------------------------NOW CREATING A PROCEDURES--------------------------------------------------
+
+CREATE PROCEDURE UPDATE_EMP_SALARY
+@Emp_Id INT,
+@New_Salary Decimal(10,2),
+@Message NVARCHAR(50) OUTPUT
+
+AS
+BEGIN
+IF EXISTS (SELECT 1 FROM EMPLOYEE WHERE EMP_ID = @Emp_id)
+BEGIN
+
+UPDATE EMPLOYEE
+SET SALARY = @New_Salary
+WHERE Emp_ID=@Emp_Id;
+
+SET @Message ='SALARY UPDATED SUCCESSFULLY.';
+END
+ELSE 
+BEGIN
+SET @Message ='EMPLOYEE NOT FOUND.';
+END
+END;
+
+-------------------------------------------------------------EXCECUTING THE PROCEDURES-------------------------------------------
+DECLARE @ResultMessage NVARCHAR(100) ;
+EXEC UPDATE_EMP_SALARY
+@Emp_Id = 3,
+@New_Salary =89870,
+@Message =@ResultMessage OUTPUT;
+SELECT @ResultMessage AS ResultMessage;
+SELECT * FROM EMPLOYEE;
+
+-----------------------------------------------------------------------------------------------------Triggers------------------------------------------
+CREATE TABLE SALARY_LOG(
+LOG_ID INT IDENTITY(1,1) PRIMARY KEY,
+EMP_ID INT,
+OLD_SALARY DECIMAL(10,2),
+NEW_SALARY DECIMAL(10,2),
+CHANGE_DATE DATE DEFAULT GETDATE()----------------------------------------------------------------BUILT IN TYPE FOR DATE--------------------------------
+);
+
+-----------------------------------------------------------------------------------------------------CREATE A TRIGGER-----------------------------------
+CREATE TRIGGER TRG_SALARY_UPDATE
+ON EMPLOYEE
+AFTER UPDATE 
+AS
+BEGIN 
+     DECLARE @EMP_ID INT,@OLD_SALARY DECIMAL(10,2) ,@NEW_SALARY DECIMAL(10,2)
+ 
+ SELECT
+	  @EMP_ID=i.EMP_ID,
+	  @OLD_SALARY=d.SALARY,
+	  @NEW_SALARY=i.SALARY
+  FROM
+	 INSERTED i
+  INNER JOIN DELETED d ON i.EMP_ID = d.EMP_ID;-----------------------------------------------------INNER JOIN USED HERE----------------------------------
+ INSERT INTO SALARY_LOG(EMP_ID,OLD_SALARY ,NEW_SALARY)
+ VALUES
+ (@EMP_ID,@OLD_SALARY,@NEW_SALARY);
+END;
+
+-------------------------------------------------------------------------------------------This Update Will Trigger The Trigger------------------------------
+UPDATE EMPLOYEE
+SET SALARY =84746.45
+WHERE EMP_ID=1;
+SELECT * FROM SALARY_LOG;
+SELECT * FROM EMPLOYEE;
+
+DELETE FROM SALARY_LOG
+WHERE LOG_ID=1;
+
+---------------------------------------------------------------------------
