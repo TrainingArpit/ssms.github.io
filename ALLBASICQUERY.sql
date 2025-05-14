@@ -359,19 +359,83 @@ BEGIN
  VALUES
  (@EMP_ID,@OLD_SALARY,@NEW_SALARY);
 END;
+-------------------EXPLANATION ABOVE--------------------
 
--------------------------------------------------------------------------------------------This Update Will Trigger The Trigger-----------------------------
+--INSERTED IS THE TEMPORARY TABLE FOR STORING DATA WITH ALIAS i--IT IS AUTOMATICALLY CREATED DURING THE UPDATE OPERATION USED BELOW--
+--DELETED IS ANOTHER TEMP-TABLE WITH ALIAS d ,WHICH CONTAINS THE ROWS BEFORE THE UPDATE WAS APPLIED
+--inner join that is done here joins the inserted and deleted tables based on emp_id ,for comparing the before and after salary records...
+--about select query above --1 line selects the emp_id from inserted table,salary from deleted table,and the salary from  inserted table and assign these values to the local variables(@scalar variables)
+
+
+
+-----------------------THERE ARE MANY TYPES OF TRIGGERS-----------------------
+
+                  ------------INSTEAD OF INSERT---------
+                  ------------INSTEAD OF UPDATE---------
+                  ------------INSTEAD OF DELETE---------
+
+--WE DON'T HAVE 'BEFORE'(EG.BEFORE DELETE) INSTEAD WE USE 'INSTEAD OF INSERT'--
+
+                  -------------AFTER DELETE-------------
+                  -------------AFTER UPDATE-------------
+                  -------------AFTER INSERT-------------
+-------------------------------------------------------------------------------------This Update Will Trigger The Trigger-----------------------------
 UPDATE EMPLOYEE
-SET SALARY =84746.45
+SET SALARY =847333.45
 WHERE EMP_ID=1;
 SELECT * FROM SALARY_LOG;
 SELECT * FROM EMPLOYEE;
 
 DELETE FROM SALARY_LOG
 WHERE LOG_ID=1;
+--------------------------------------------------------------------ONE MORE EXAMPLE TO UNDERSTAND --------------------------------------
+------------------------------------------------------------------------INSTEAD OF INSERT------------------------------------------------
 
------------------------------------------------------------------------------------------------------Working on CLOSURES-------------------------------------
------------------------------------------------------------------------------we cant create closures but we can create closure-like Behaviour----------------
+CREATE TABLE EMPLOYEESS (
+EMP_ID INT IDENTITY(1,1) PRIMARY KEY,
+F_NAME NVARCHAR(50),
+L_NAME NVARCHAR(50),
+SALARY DECIMAL(10,2)
+);
+--------------------------------
+DROP TRIGGER TRG_BEFORE_INSERT;
+--------------------------------
+CREATE TRIGGER TRG_BEFORE_INSERTT ---------------------------------------creating a TRIGGER-----------------------------------------------
+ON EMPLOYEESS
+INSTEAD OF INSERT
+AS
+BEGIN
+   DECLARE @F_NAME NVARCHAR(50),@L_NAME NVARCHAR(50),@SALARY DECIMAL(10,2)
+   SELECT
+	   @F_NAME = F_NAME,
+	   @L_NAME = L_NAME,
+	   @SALARY = SALARY
+
+   FROM INSERTED----IN-BUILT TABLE-INSERTED---
+
+   IF @SALARY < 3000 
+   BEGIN 
+        PRINT 'SALARY CANNOT BE LESS THAN 3000';
+   END
+   ELSE
+   BEGIN
+        INSERT INTO EMPLOYEESS (F_NAME,L_NAME,SALARY)
+		VALUES
+		(@F_NAME,@L_NAME,@SALARY);
+		END
+END;
+------------------------------------TESTING THE TRIGGER---------------------------------
+
+INSERT INTO EMPLOYEESS (F_NAME,L_NAME,SALARY)
+VALUES
+('ARPIT','THAKUR',2500),
+('PINK','PANTHER',3200);
+
+SELECT * FROM EMPLOYEESS;
+-------------------------------------TRIGGER----------------------------------------
+
+--------------------------------------------------------------------------------------------Working on CLOSURES----------------------------------------
+-----------------------------------------------------------------------we cant create closures but we can create closure-like Behaviour----------------
 ------example--------
 CREATE TABLE #COUNTERR(
 	OPERTAION NVARCHAR(50),
@@ -383,14 +447,14 @@ VALUES
 ('UPDATE',0);
 
 SELECT * FROM #COUNTERR;
-----------------------------------------------CREATING  A PROCEDURE TO UPDATE THE STATE-------------------------------------
+----------------------------------------------CREATING  A PROCEDURE TO UPDATE THE STATE--------------------------------------
 CREATE PROCEDURE UpdateCounter
   @OPERATION NVARCHAR(50)
 AS
 BEGIN
     UPDATE #COUNTERR
 	SET COUNTT = COUNTT + 1
-	WHERE OPERTAION =@OPERATION
+	WHERE OPERTAION = @OPERATION
 END;
 ------------------------------------ANOTHER PROCEDURE TO GET INTO THAT STATE(LIKE PROCEDURES)--------------------------------
 CREATE PROCEDURE GET_COUNTERR
@@ -429,6 +493,7 @@ SELECT FLOOR(4.7);---------OUTPUT 4
 ---------------------------------------------------------------------------SCALAR FUNCTIONS----------------------------------------------------------------
 
 -------------------MAKING A SCALER FUNCTION TO CALCULATE AREA OF A CIRCLE------------------
+
 CREATE FUNCTION CAL_AREA_CIRCLE(@Radius DECIMAL(10,2))
 RETURNS DECIMAL(10,2)
 AS
@@ -468,6 +533,23 @@ BEGIN
 END;
 
 SELECT dbo.CAL_TOTAL_SALE(4,1500.99);
+
+-----------------------------------------------------------------------------LEARNING ABOUT JOINS-----------------------------------------------------------
+
+--INNER JOIN--
+CREATE TABLE DEPARTMENTSS(
+DEPT_ID INT IDENTITY(1,1)PRIMARY KEY,
+DEPT_NAME NVARCHAR(50)
+);
+CREATE TABLE EMPLOYEEES(
+EMP_ID INT IDENTITY(1,1) PRIMARY KEY,
+EMP_NAME NVARCHAR(50),
+DEPT_ID INT
+);
+INSERT INTO DEPARTMENTSS(DEPT_NAME)
+VALUES
+('HR'),
+
 
 
 
