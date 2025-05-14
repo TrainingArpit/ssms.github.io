@@ -536,7 +536,7 @@ SELECT dbo.CAL_TOTAL_SALE(4,1500.99);
 
 -----------------------------------------------------------------------------LEARNING ABOUT JOINS-----------------------------------------------------------
 
---INNER JOIN--
+--INNER JOIN--EXAMPLE--
 CREATE TABLE DEPARTMENTSS(
 DEPT_ID INT IDENTITY(1,1)PRIMARY KEY,
 DEPT_NAME NVARCHAR(50)
@@ -549,12 +549,54 @@ DEPT_ID INT
 INSERT INTO DEPARTMENTSS(DEPT_NAME)
 VALUES
 ('HR'),
+('Finance'),
+('IT');
+INSERT INTO EMPLOYEEES(EMP_NAME,DEPT_ID)
+VALUES
+('HONOR',1);
+('ROMAN',1),
+('BROCK',3),
+('CENA',2);
+
+SELECT * FROM DEPARTMENTSS;
+SELECT * FROM EMPLOYEEES;
+-----------------------------------------ALL MOST EVERY EXAMPLE IS SAME------------------------------
+-------------------------------------------------INNER JOIN------------------------------------------
+SELECT e.EMP_NAME ,d.DEPT_NAME
+FROM EMPLOYEEES e
+INNER JOIN  DEPARTMENTSS d on e.DEPT_ID =d.DEPT_ID;
+
+-----------------------------------------LEFT JOIN/LEFT OUTER JOIN-----------------------------------
+SELECT e.EMP_NAME,d.Dept_NAME
+FROM EMPLOYEEES e
+LEFT OUTER JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;
+--YOU CAN WRITE --LEFT JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;--
+
+---------------------------------------RIGHT JOIN /RIGHT OUTER JOIN-----------------------------------
+
+SELECT e.EMP_NAME,d.Dept_NAME
+FROM EMPLOYEEES e
+RIGHT OUTER JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;
+--YOU CAN WRITE --RIGHT JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;--
+
+---------------------------------------FULL JOIN /FULL OUTER JOIN--------------------------------------
+
+SELECT e.EMP_NAME,d.Dept_NAME
+FROM EMPLOYEEES e
+FULL OUTER JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;
+
+--YOU CAN WRITE --FULL OUTER JOIN DEPARTMENTSS d ON e.DEPT_ID = d.DEPT_ID;--
 
 
 
+---------------------------------CROSS JOIN -RETURNS HE CARTESIAN PRODUCT-------------------------------
 
+SELECT e.EMP_NAME,d.Dept_NAME
+FROM EMPLOYEEES e
+CROSS JOIN DEPARTMENTSS d;
 
+-------HERE i HAVE 3 DEPARTMENTS AND 3 EMPLOYEES  ---SO 3 * 3 = 9 ROWS} TOTAL 9 ROWS--------------------
 
-
-
-
+SELECT e1.EMP_NAME AS EMPLOYEE1,e2.EMP_NAME AS EMPLOYEE2 ,e1.DEPT_ID
+FROM EMPLOYEEES e1
+INNER JOIN EMPLOYEEES e2 ON e1.DEPT_ID = e2.DEPT_ID AND e1.EMP_ID <> e2.EMP_ID;--e1.EMP_ID <> e2.EMP_ID   HERE <> PREVENTS THE QUERY FROM PAIRING THE SAME EMPLOYEE WITH THEMSELVES eg.Arpit with Arpit
